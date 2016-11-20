@@ -8,11 +8,10 @@ var Neuron = synaptic.Neuron,
     Trainer = synaptic.Trainer,
     Architect = synaptic.Architect;
 
-var learningRate = .8;
-var runs = 0;
-var learns = 0;
+var learningRate = .3;
+
 var SIZE = [600,600];
-var speed = 3;
+var speed = 1;
 
 var out = $("#output");
 var runnerA = $("#A");
@@ -97,7 +96,7 @@ var Bs = LayerRunner(pos[0], pos[1],runnerB);
 Bs.render();
 
 function LayerLearn(A,B){
-    var input = B.inputLayer.activate([B.x/SIZE[0], B.y/SIZE[1], A.x/SIZE[0], A.y/SIZE[0], A.signal]);
+    B.inputLayer.activate([B.x/SIZE[0], B.y/SIZE[1], A.x/SIZE[0], A.y/SIZE[0], A.signal]);
     var output = B.outputLayer.activate();
     B.signal = B.signalLayer.activate()[0];
 
@@ -108,7 +107,19 @@ function LayerLearn(A,B){
     B.y += y * speed;
     B.render();
 
-    B.outputLayer.propagate(learningRate, [ A.x / SIZE[0], A.y / SIZE[0]]);
+    var prop = [0.5,0.5];
+    if(A.x > B.x){
+        prop[0] = 1;
+    }else if(A.x < B.x){
+        prop[0] = 0;
+    }
+    if(A.y > B.y){
+        prop[1] = 1;
+    }else if(A.y < B.y){
+        prop[1] = 0;
+    }
+
+    B.outputLayer.propagate(learningRate, prop);
 
     A.inputLayer.activate([A.x/SIZE[0], A.y/SIZE[1], B.x/SIZE[0], B.y/SIZE[0], B.signal]);
     output = A.outputLayer.activate();
@@ -121,7 +132,18 @@ function LayerLearn(A,B){
     A.y += y * speed;
     A.render();
 
-    A.outputLayer.propagate(learningRate, [B.x / SIZE[0], B.y / SIZE[0]]);
+    prop = [0.5,0.5];
+    if(A.x > B.x){
+        prop[0] = 0;
+    }else if(A.x < B.x){
+        prop[0] = 1;
+    }
+    if(A.y > B.y){
+        prop[1] = 0;
+    }else if(A.y < B.y){
+        prop[1] = 1;
+    }
+    A.outputLayer.propagate(learningRate, prop);
 }
 
 function randomize(){
