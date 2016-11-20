@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neuron</title>
+
+</head>
+<body>
+    <div id="background">
+        <div id="A" class="rect"></div>
+        <div id="B" class="rect"></div>
+    </div>
+
+    <script src="jquery-3.1.1.min.js"></script>
+    <script src="synaptic.js"></script>
+    <script src="runner.js"></script>
+
+    <style>
+        .rect{
+            width:10px;
+            height:10px;
+            position:absolute;
+            top:0px;
+            left:0px;
+        }
+
+        #A{
+            background:red;
+        }
+
+        #B{
+            background:blue;
+        }
+
+        #background{
+            position: fixed;
+            width:610px;
+            height:610px;
+            background: beige;
+            left:calc(50% - 305px);
+        }
+    </style>
+</body>
+</html>
