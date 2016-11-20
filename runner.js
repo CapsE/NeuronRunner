@@ -16,48 +16,73 @@ var speed = 3;
 
 var out = $("#output");
 var runnerA = $("#A");
+var runnerAns = $("#Ans");
 var runnerB = $("#B");
+var runnerBns = $("#Bns");
 var running = true;
 
 function Runner(x,y, runner){
-    var r = {x:x, y:y, runner:runner};
+    var r = {x:x, y:y, runner:runner, signal:0};
 
-    r.mx = new Neuron();
-    r.my = new Neuron();
-    r.tx = new Neuron();
-    r.ty = new Neuron();
-    r.ox = new Neuron();
-    r.oy = new Neuron();
+    r.mx = new Neuron(); //my X
+    r.my = new Neuron(); //my Y
+    r.tx = new Neuron(); //their X
+    r.ty = new Neuron(); //their Y
+    r.ox = new Neuron(); //out X
+    r.oy = new Neuron(); //out Y
+
+    r.is = new Neuron(); //in Signal
+    r.os = new Neuron(); //out Signal
 
     r.mx.project(r.ox);
     r.my.project(r.ox);
     r.tx.project(r.ox);
     r.ty.project(r.ox);
+    r.is.project(r.ox);
 
     r.mx.project(r.oy);
     r.my.project(r.oy);
     r.tx.project(r.oy);
     r.ty.project(r.oy);
+    r.is.project(r.oy);
+
+    r.tx.project(r.os);
+    r.ty.project(r.os);
 
     r.render = function(){
         r.x = Math.min(SIZE[0], Math.max(0, r.x));
         r.y = Math.min(SIZE[1], Math.max(0, r.y));
-        r.runner.css({transform: "translate(" + r.x + "px," + r.y + "px)"});
+        r.runner.css({
+            transform: "translate(" + r.x + "px," + r.y + "px)",
+            borderRadius: 50 * r.signal + "%"
+        });
     };
 
     return r;
 }
 
-var A = Runner(Math.random() * SIZE[0],Math.random() * SIZE[1],runnerA);
-A.render();
-var B = Runner(Math.random() * SIZE[0],Math.random() * SIZE[1],runnerB);
-B.render();
+var pos = [Math.random() * SIZE[0], Math.random() * SIZE[1]];
+var As = Runner(pos[0], pos[1],runnerA);
+As.render();
+var Ans = Runner(pos[0], pos[1],runnerAns);
+Ans.render();
 
-function learn(){
+pos = [Math.random() * SIZE[0], Math.random() * SIZE[1]];
+var Bs = Runner(pos[0], pos[1],runnerB);
+Bs.render();
+var Bns = Runner(pos[0], pos[1],runnerBns);
+Bns.render();
+
+function learn(A,B, signal){
     B.mx.activate(B.x/SIZE[0]);
     B.my.activate(B.y/SIZE[1]);
     B.tx.activate(A.x/SIZE[0]);
     B.ty.activate(A.y/SIZE[0]);
+    if(signal){
+        B.is.activate(A.signal);
+        B.signal = B.os.activate();
+    }
+
 
     var x = Math.round((B.ox.activate() - 0.5) * 2);
     var y = Math.round((B.oy.activate() - 0.5) * 2);
@@ -73,6 +98,10 @@ function learn(){
     A.my.activate(A.y/SIZE[1]);
     A.tx.activate(B.x/SIZE[0]);
     A.ty.activate(B.y/SIZE[0]);
+    if(signal){
+        A.is.activate(B.signal);
+        A.signal =  A.os.activate();
+    }
 
     x = Math.round((A.ox.activate() - 0.5) * 2);
     y = Math.round((A.oy.activate() - 0.5) * 2);
@@ -85,37 +114,37 @@ function learn(){
     A.oy.propagate(learningRate, B.y / SIZE[0]);
 }
 
-function runChunk(x){
-    for(var i = 0; i < x; i++){
-        run();
-    }
-}
-
-function learnChunk(x){
-    for(var i = 0; i < x; i++){
-        learn();
-    }
-}
-
 function randomize(){
-    A.x = Math.random() * SIZE[0];
-    A.y = Math.random() * SIZE[1];
-    B.x = Math.random() * SIZE[0];
-    B.y = Math.random() * SIZE[1];
+    var x = Math.random() * SIZE[0];
+    var y = Math.random() * SIZE[1];
+    As.x = x;
+    As.y = y;
+    Ans.x = x;
+    Ans.y = y;
+
+    x = Math.random() * SIZE[0];
+    y = Math.random() * SIZE[1];
+    Bs.x = x;
+    Bs.y = y;
+    Bns.x = x;
+    Bns.y = y;
 }
 
 var lpa = [];
 var lpb = [];
 setInterval(function (){
     if(running){
-        lpa = [A.x, A.y];
-        lpb = [B.x, B.y];
-        learn();
-        if(lpa[0] == A.x && lpa[1] == A.y && lpb[0] == B.x && lpb[1] == B.y){
+        lpa = [As.x, As.y];
+        lpb = [Bs.x, Bs.y];
+        lpans = [Ans.x, Ans.y];
+        lpbns = [Bns.x, Bns.y];
+        learn(As,Bs, true);
+        learn(Ans,Bns, false);
+        if(lpa[0] == As.x && lpa[1] == As.y && lpb[0] == Bs.x && lpb[1] == Bs.y && Ans.x == lpans[0] && Ans.y == lpans[1] && Bns.x == lpbns[0] && Bns.y == lpbns[1]){
             randomize();
         }
     }
-}, 50);
+}, 10);
 /*
 function learn(){
     return new Promise(function(resolve){
